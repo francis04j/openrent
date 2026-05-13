@@ -14,31 +14,34 @@ namespace OpenRentStringLib.Tests
         {
             var result = _builder.ReverseInput("nepo");
 
-            Assert.Equal("open", result);
+            Assert.True(result.IsSuccess);
+            Assert.Equal("open", result.Value);
         }
 
         [Fact]
-        public void ReverseInput_LogsWarningAndReturnsNull_WhenInputIsNull()
+        public void ReverseInput_ReturnsFailure_WhenInputIsNull()
         {
             var logger = new TestLogger();
             var builder = new OpenRentStringBuilder(logger);
 
             var result = builder.ReverseInput(null);
 
-            Assert.Null(result);
+            Assert.True(result.IsFailure);
+            Assert.Equal(OpenRentErrors.NullOrEmptyInput, result.Error);
             Assert.Equal(LogLevel.Warning, logger.LastLogLevel);
             Assert.Equal("Input is null or empty.", logger.LastMessage);
         }
 
         [Fact]
-        public void ReverseInput_LogsWarningAndReturnsEmptyString_WhenInputIsEmpty()
+        public void ReverseInput_ReturnsFailure_WhenInputIsEmpty()
         {
             var logger = new TestLogger();
             var builder = new OpenRentStringBuilder(logger);
 
             var result = builder.ReverseInput(string.Empty);
 
-            Assert.Equal(string.Empty, result);
+            Assert.True(result.IsFailure);
+            Assert.Equal(OpenRentErrors.NullOrEmptyInput, result.Error);
             Assert.Equal(LogLevel.Warning, logger.LastLogLevel);
             Assert.Equal("Input is null or empty.", logger.LastMessage);
         }
@@ -48,18 +51,20 @@ namespace OpenRentStringLib.Tests
         {
             var result = _builder.GetEarliestAlphabet("nepo");
 
-            Assert.Equal('e', result);
+            Assert.True(result.IsSuccess);
+            Assert.Equal('e', result.Value);
         }
 
         [Fact]
-        public void GetEarliestAlphabetCharacter_LogsWarningAndReturnsNull_WhenNoAlphabeticCharacterExists()
+        public void GetEarliestAlphabetCharacter_ReturnsFailure_WhenNoAlphabeticCharacterExists()
         {
             var logger = new TestLogger();
             var builder = new OpenRentStringBuilder(logger);
 
             var result = builder.GetEarliestAlphabet("1234");
 
-            Assert.Null(result);
+            Assert.True(result.IsFailure);
+            Assert.Equal(OpenRentErrors.MissingAlphabeticCharacter, result.Error);
             Assert.Equal(LogLevel.Warning, logger.LastLogLevel);
             Assert.Equal("Input does not contain an alphabetic character.", logger.LastMessage);
         }
@@ -69,7 +74,8 @@ namespace OpenRentStringLib.Tests
         {
             var result = _builder.CountVowels("nepo");
 
-            Assert.Equal(2, result);
+            Assert.True(result.IsSuccess);
+            Assert.Equal(2, result.Value);
         }
 
         [Fact]
@@ -77,7 +83,22 @@ namespace OpenRentStringLib.Tests
         {
             var result = _builder.GetSuffixWordByVowelCount(3);
 
-            Assert.Equal("open", result);
+            Assert.True(result.IsSuccess);
+            Assert.Equal("open", result.Value);
+        }
+
+        [Fact]
+        public void GetVowelParityWord_ReturnsFailure_ForNegativeVowelCount()
+        {
+            var logger = new TestLogger();
+            var builder = new OpenRentStringBuilder(logger);
+
+            var result = builder.GetSuffixWordByVowelCount(-1);
+
+            Assert.True(result.IsFailure);
+            Assert.Equal(OpenRentErrors.NegativeVowelCount(-1), result.Error);
+            Assert.Equal(LogLevel.Warning, logger.LastLogLevel);
+            Assert.Equal("Vowel count cannot be negative: -1.", logger.LastMessage);
         }
 
         [Fact]
@@ -85,7 +106,8 @@ namespace OpenRentStringLib.Tests
         {
             var result = _builder.BuildResult("nepo");
 
-            Assert.Equal("openerent", result);
+            Assert.True(result.IsSuccess);
+            Assert.Equal("openerent", result.Value);
         }
 
         private sealed class TestLogger : ILogger<OpenRentStringBuilder>

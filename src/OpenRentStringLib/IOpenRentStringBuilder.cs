@@ -2,14 +2,14 @@ namespace OpenRentStringLib
 {
     public interface IOpenRentStringBuilder
     {
-        string? ReverseInput(string? input);
+        Result<string> ReverseInput(string? input);
 
-        char? GetEarliestAlphabet(string input);
+        Result<char> GetEarliestAlphabet(string? input);
 
-        int CountVowels(string input);
+        Result<int> CountVowels(string? input);
 
-        string GetSuffixWordByVowelCount(int vowelCount);
+        Result<string> GetSuffixWordByVowelCount(int vowelCount);
 
-        string BuildResult(string input);
+        Result<string> BuildResult(string? input);
     }
 }

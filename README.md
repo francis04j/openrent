@@ -2,6 +2,8 @@
 
 This repository contains a small .NET  C# solution for the OpenRent string-building exercise.
 
+The library uses a result-type pattern for its public API, returning `Result<T>` values instead of using `null` or exceptions for expected validation failures.
+
 Given an input string, the library builds a result by concatenating:
 
 - the reversed input string
@@ -67,5 +69,12 @@ using OpenRentStringLib;
 var builder = new OpenRentStringBuilder();
 var result = builder.BuildResult("nepo");
 
-// result == "openerent"
+if (result.IsSuccess)
+{
+	Console.WriteLine(result.Value);
+}
+else
+{
+	Console.WriteLine($"{result.Error.Code}: {result.Error.Message}");
+}
 ```

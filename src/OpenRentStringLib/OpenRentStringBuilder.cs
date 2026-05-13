@@ -21,23 +21,21 @@ namespace OpenRentStringLib
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public string? ReverseInput(string? input)
+        public Result<string> ReverseInput(string? input)
         {
             if (string.IsNullOrEmpty(input))
             {
-                _logger.LogWarning("Input is null or empty.");
-                return input;
+                return Failure<string>(OpenRentErrors.NullOrEmptyInput);
             }
 
-            return new string(input.Reverse().ToArray());
+            return Result<string>.Success(new string(input.Reverse().ToArray()));
         }
 
-        public char? GetEarliestAlphabet(string input)
+        public Result<char> GetEarliestAlphabet(string? input)
         {
-           if (string.IsNullOrEmpty(input))
+            if (string.IsNullOrEmpty(input))
             {
-                _logger.LogWarning("Input is null or empty.");
-                return null;
+                return Failure<char>(OpenRentErrors.NullOrEmptyInput);
             }
 
             char? earliestCharacter = input
@@ -49,48 +47,65 @@ namespace OpenRentStringLib
 
             if (!earliestCharacter.HasValue)
             {
-                _logger.LogWarning("Input does not contain an alphabetic character.");
-                return null;
+                return Failure<char>(OpenRentErrors.MissingAlphabeticCharacter);
             }
 
-            return earliestCharacter;
+            return Result<char>.Success(earliestCharacter.Value);
         }
 
-        public int CountVowels(string input)
+        public Result<int> CountVowels(string? input)
         {
             if (string.IsNullOrEmpty(input))
             {
-                _logger.LogWarning("Input is null or empty.");
-                return 0;
+                return Failure<int>(OpenRentErrors.NullOrEmptyInput);
             }
 
-            return input.Count(character => Vowels.Contains(char.ToLowerInvariant(character)));
+            return Result<int>.Success(input.Count(character => Vowels.Contains(char.ToLowerInvariant(character))));
         }
 
-        public string GetSuffixWordByVowelCount(int vowelCount)
+        public Result<string> GetSuffixWordByVowelCount(int vowelCount)
         {
             if (vowelCount < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(vowelCount), "Vowel count cannot be negative.");
+                return Failure<string>(OpenRentErrors.NegativeVowelCount(vowelCount));
             }
 
-            return vowelCount % 2 == 0 ? "rent" : "open";
+            return Result<string>.Success(vowelCount % 2 == 0 ? "rent" : "open");
         }
 
-        public string BuildResult(string input)
+        public Result<string> BuildResult(string? input)
         {
-            if (string.IsNullOrEmpty(input))
+            var reversedInput = ReverseInput(input);
+            if (reversedInput.IsFailure)
             {
-                _logger.LogWarning("Input is null or empty.");
-                return string.Empty;
+                return Result<string>.Failure(reversedInput.Error);
             }
 
-            var reversedInput = ReverseInput(input);
             var earliestCharacter = GetEarliestAlphabet(input);
-            var vowelCount = CountVowels(input);
-            var suffix = GetSuffixWordByVowelCount(vowelCount);
+            if (earliestCharacter.IsFailure)
+            {
+                return Result<string>.Failure(earliestCharacter.Error);
+            }
 
-            return string.Concat(reversedInput, earliestCharacter?.ToString() ?? string.Empty, suffix);
+            var vowelCount = CountVowels(input);
+            if (vowelCount.IsFailure)
+            {
+                return Result<string>.Failure(vowelCount.Error);
+            }
+
+            var suffix = GetSuffixWordByVowelCount(vowelCount.Value);
+            if (suffix.IsFailure)
+            {
+                return Result<string>.Failure(suffix.Error);
+            }
+
+            return Result<string>.Success(string.Concat(reversedInput.Value, earliestCharacter.Value.ToString(), suffix.Value));
+        }
+
+        private Result<T> Failure<T>(Error error)
+        {
+            _logger.LogWarning(error.Message);
+            return Result<T>.Failure(error);
         }
     }
 }
